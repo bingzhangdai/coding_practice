@@ -562,15 +562,16 @@ function UpdatePos() {
 
 <script>
 function step() {
+  plot() 
   UpdatePos()
   if (drag) {
     pos[nodeid].x = mousex;
     pos[nodeid].y = mousey;
   }
+  // plot()
   Updateforce()
   //UpdateVelocity()
   //alert(velocity[0][0])
-  plot()  
 }
 setInterval(step, 10);
 </script>
