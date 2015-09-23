@@ -14,29 +14,35 @@ button {
   top: 10px;
 }
 .line {
-  stroke: black;
+  stroke: blue;
   stroke-width: 1px;
   stroke-opacity: .6;
   fill: none; 
-  /*stroke-dasharray: 10000000; 
+  stroke-dasharray: 10000000; 
   stroke-dashoffset: 10000000;
-  animation: dash 6000s linear forwards;  speed */
+  animation: dash 4000s linear forwards;
 }
-/*@keyframes dash {
+.stat {
+  stroke: red;
+  stroke-width: 1px;
+  stroke-opacity: .6;
+  fill: none; 
+}
+@keyframes dash {
   to {
     stroke-dashoffset: 0;
   }
-}*/
+}
 </style>
 
 <body>
-<svg  style="margin-left:-200px" id = "pic" width="2000" height="800" version="1.1" xmlns="http://www.w3.org/2000/svg"></svg>
+
 <button onclick="update()">calculate</button>
 
 <form>
   <fieldset>
     <legend>参数设置</legend>
-    电导G(0.50-0.80)：<input type="text" id="p1" onkeyup="value=value.replace(/[^\d{1,}\.\d{1,}|\d{1,}]/g,'')"/>
+    电导G(0.50-0.80)：<input type="text" id="p1" onkeyup="value=value.replace(/[^\d{1,}\.\d{1,}|\d{1,}]/g,'')"/> mS
     <input type="range" id="s1" value="0.6061" min="0.50" max="0.80" step="0.0001"/>
     吸引子个数：
     <select name="scroll" id="scroll">
@@ -46,7 +52,7 @@ button {
       <option value="nine">nine 9</option>
       <option value="eleven">eleven 11</option>
     </select><br />
-    电感L (8.00-10.0)：<input type="text" id="p2" onkeyup="value=value.replace(/[^\d{1,}\.\d{1,}|\d{1,}]/g,'')"/>
+    电感L (8.00-10.0)：<input type="text" id="p2" onkeyup="value=value.replace(/[^\d{1,}\.\d{1,}|\d{1,}]/g,'')"/> mH
     <input type="range" id="s2" value="9.3" min="8.0" max="10.0" step="0.001"/>
   </fieldset>
 </form>
@@ -76,8 +82,8 @@ var scroll = 11,
       return E;
     })();
 
-// var width = 1800,
-//     height = 800;
+var width = 1800,
+    height = 400;
 
 function parlinear(x) {
   var tmp = 0;
@@ -96,11 +102,21 @@ var chuafun = function(t, pos) {
 
 var p = document.createElementNS('http://www.w3.org/2000/svg','polyline');
     p.setAttribute("class", "line");
-var svg = document.getElementById("pic")
-    //svg.setAttribute("height", height);
-    //svg.setAttribute("width", width);
+var s = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+    s.setAttribute("class", "stat");
+var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute("height", height);
+    svg.setAttribute("width", width);
+    svg.setAttribute("style", "margin-left:-200px")
+var stat=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    stat.setAttribute("height", height);
+    stat.setAttribute("width", width);
+    stat.setAttribute("style", "margin-left:-200px")
+    
+    document.getElementsByTagName("body")[0].appendChild(stat);
     document.getElementsByTagName("body")[0].appendChild(svg);
     svg.appendChild(p);
+    stat.appendChild(s);
 
 function update() {
   setp(document.getElementById("scroll").selectedIndex);
@@ -114,7 +130,7 @@ function update() {
           for (var i = 0; i < 3; i++) {
             ini[i] = sol.y[sol.x.length-1][i];
           }
-          for (var i = 0; i < sol.x.length; i++) {
+          for (var i = 5; i < sol.x.length; i++) {
             path += (sol.y[i][0]+4.5)*160 + "," + (sol.y[i][1]+0.5)*480 + " "
           }
           if (Math.abs(ini[0]) > 12) {
@@ -123,13 +139,16 @@ function update() {
         }
         return path;
   })();
-  p.setAttribute("points", path)
+  svg.removeChild(p);
+  svg.appendChild(p); // for animation, necessary, i have tried to find a better solution
+  p.setAttribute("points", path);
+  s.setAttribute("points", path);
+  
   // var length = document.querySelector(".polyline").getTotalLength();
   // alert(length)
-  //p.setAttribute("class", "line")
 }
 
-function setp(n) {
+function setp(n) {  // set(update) parameter
   max = 2 * n + 2; // max = scroll - 1;
   L = parseFloat(document.getElementById("p2").value);
   G0 = parseFloat(document.getElementById("p1").value);
@@ -149,8 +168,6 @@ function setp(n) {
         }
         E[i+1] = 2 * tmp / (G[1] + G[i+2]) - E[i];
   }
-  
-  
 }
 
 function printValue(sliderID, textbox) {
