@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>chaotic</title>
+<style>
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  margin: auto;
+  position: relative;
+  width: 960px;
+}
+button {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+.line {
+  stroke: black;
+  stroke-width: 1px;
+  stroke-opacity: .6;
+  fill: none; 
+  /*stroke-dasharray: 10000000; 
+  stroke-dashoffset: 10000000;
+  animation: dash 6000s linear forwards;  speed */
+}
+/*@keyframes dash {
+  to {
+    stroke-dashoffset: 0;
+  }
+}*/
+</style>
+
+<body>
+<svg  style="margin-left:-200px" id = "pic" width="2000" height="800" version="1.1" xmlns="http://www.w3.org/2000/svg"></svg>
+<button onclick="update()">calculate</button>
+
+<form>
+  <fieldset>
+    <legend>参数设置</legend>
+    电导G(0.50-0.80)：<input type="text" id="p1" onkeyup="value=value.replace(/[^\d{1,}\.\d{1,}|\d{1,}]/g,'')"/>
+    <input type="range" id="s1" value="0.6061" min="0.50" max="0.80" step="0.0001"/>
+    吸引子个数：
+    <select name="scroll" id="scroll">
+      <option value="three">three 3</option>
+      <option value="five">five 5</option>
+      <option value="seven">seven 7</option>
+      <option value="nine">nine 9</option>
+      <option value="eleven">eleven 11</option>
+    </select><br />
+    电感L (8.00-10.0)：<input type="text" id="p2" onkeyup="value=value.replace(/[^\d{1,}\.\d{1,}|\d{1,}]/g,'')"/>
+    <input type="range" id="s2" value="9.3" min="8.0" max="10.0" step="0.001"/>
+  </fieldset>
+</form>
+
+
+<script src="numeric-1.2.6.min.js"></script>
+<script src="jquery-1.11.3.min.js"></script>
+<!--<script src="d3.min.js"></script> -->
+<!--firefox will give a warning when using d3-->
+<script>
+var scroll = 11,
+    time = 200000,
+    G0 = 0.6061, // G[1] = G0;
+    G = new Array(0, 0.6061, -0.32, -0.852, -0.32, -0.852, -0.32, -0.852, -0.32, -0.852, -0.32, -0.852, -0.32, -0.852, -0.32),
+    max = scroll - 1,
+    L = 9.3,
+    E = (function() {
+      E = new Array();
+      E[1] = 0.2;
+      for (var i = 1; i < max; i++) {
+        var tmp = 0;
+        for (var j = 1; j <= i; j++) {
+          tmp += (G[j+2] - G[j+1]) * E[j];
+        }
+        E[i+1] = 2 * tmp / (G[1] + G[i+2]) - E[i];
+      }
+      return E;
+    })();
+
+// var width = 1800,
+//     height = 800;
+
+function parlinear(x) {
+  var tmp = 0;
+  for (var i = 1; i <=max; i++) {
+    tmp += (G[i+1] - G[i+2]) * (Math.abs(x+E[i]) - Math.abs(x-E[i]));
+  }
+  return G[12]*x + 0.5*tmp;
+}
+
+var chuafun = function(t, pos) {
+  var C = new Array(5.6, 47.9);
+  return [G0*(pos[1]-pos[0]) / C[0] - parlinear(pos[0]) / C[0],
+          G0*(pos[0]-pos[1]) / C[1] + pos[2] / C[1],
+          -pos[1] / L];
+}
+
+var p = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+    p.setAttribute("class", "line");
+var svg = document.getElementById("pic")
+    //svg.setAttribute("height", height);
+    //svg.setAttribute("width", width);
+    document.getElementsByTagName("body")[0].appendChild(svg);
+    svg.appendChild(p);
+
+function update() {
+  setp(document.getElementById("scroll").selectedIndex);
+  path = (function() {
+    var start = 0,
+        ini = new Array(0.25, 0.25, 0.25),
+        path = "";
+        while (start < time) {
+          var sol = numeric.dopri(start, time, ini, chuafun); // same as ode45;
+          start = sol.x[sol.x.length-1];
+          for (var i = 0; i < 3; i++) {
+            ini[i] = sol.y[sol.x.length-1][i];
+          }
+          for (var i = 0; i < sol.x.length; i++) {
+            path += (sol.y[i][0]+4.5)*160 + "," + (sol.y[i][1]+0.5)*480 + " "
+          }
+          if (Math.abs(ini[0]) > 12) {
+            break;
+          }
+        }
+        return path;
+  })();
+  p.setAttribute("points", path)
+  // var length = document.querySelector(".polyline").getTotalLength();
+  // alert(length)
+  //p.setAttribute("class", "line")
+}
+
+function setp(n) {
+  max = 2 * n + 2; // max = scroll - 1;
+  L = parseFloat(document.getElementById("p2").value);
+  G0 = parseFloat(document.getElementById("p1").value);
+  G[1] = G0;
+  switch(n) {
+    case 0: time = 20000; break; // 3
+    case 1: time = 50000; break; // 5
+    case 2: time = 80000; break; // 7
+    case 3: time = 110000; break; // 9
+    case 4: time = 200000; break; // 11
+    default: time = 200000;
+  }
+  for (var i = 1; i < max; i++) {
+        var tmp = 0;
+        for (var j = 1; j <= i; j++) {
+          tmp += (G[j+2] - G[j+1]) * E[j];
+        }
+        E[i+1] = 2 * tmp / (G[1] + G[i+2]) - E[i];
+  }
+  
+  
+}
+
+function printValue(sliderID, textbox) {
+            var x = document.getElementById(textbox);
+            var y = document.getElementById(sliderID);
+            x.value = y.value;
+}
+jQuery('#s1').change(function(){
+   printValue('s1', 'p1');
+});
+jQuery('#s2').change(function(){
+  printValue('s2', 'p2');
+});
+
+window.onload = function() { printValue('s1', 'p1'); printValue('s2', 'p2'); }
+
+
+</script>
+</body>
