@@ -2,68 +2,101 @@
 <meta charset="utf-8">
 <title>chaotic</title>
 <style>
-body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  margin: auto;
-  position: relative;
-  width: 960px;
-}
-button {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-}
-.line {
-  stroke: blue;
-  stroke-width: 1px;
-  stroke-opacity: .6;
-  fill: none; 
-  stroke-dasharray: 10000000; 
-  stroke-dashoffset: 10000000;
-  animation: dash 4000s linear forwards;
-}
-.stat {
-  stroke: red;
-  stroke-width: 1px;
-  stroke-opacity: .6;
-  fill: none; 
-}
-@keyframes dash {
-  to {
-    stroke-dashoffset: 0;
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin: auto;
+    position: relative;
+    width: 960px;
   }
-}
+  
+  button {
+    position: absolute;
+    right: 10px;
+    top: 13px;
+  }
+  
+  .line {
+    stroke: red;
+    stroke-width: 1px;
+    stroke-opacity: 1;
+    fill: none;
+    stroke-dasharray: 10000000;
+    stroke-dashoffset: 10000000;
+    animation: dash 4000s linear forwards;
+  }
+  
+  .stat {
+    stroke: yellow;
+    stroke-width: 1px;
+    stroke-opacity: .8;
+    fill: none;
+  }
+  .rn {
+    stroke: darkgreen;
+    stroke-width: 1px;
+    stroke-opacity: 1;
+    fill: none;
+  }
+  .gl {
+    stroke: red;
+    stroke-width: 1px;
+    stroke-opacity: 1;
+    fill: none;
+  }
+  @keyframes dash {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  div#first {float:left;}
+  div#second {float:right;}
+  div#ylt {float:left;}
+  div#rn {float:right;}
 </style>
 
 <body>
+  <button onclick="update()">calculate</button>
 
-<button onclick="update()">calculate</button>
-
-<form>
-  <fieldset>
-    <legend>参数设置</legend>
-    电导G(0.50-0.80)：<input type="text" id="p1" onkeyup="value=value.replace(/[^\d{1,}\.\d{1,}|\d{1,}]/g,'')"/> mS
-    <input type="range" id="s1" value="0.6061" min="0.50" max="0.80" step="0.0001"/>
-    吸引子个数：
-    <select name="scroll" id="scroll">
-      <option value="three">three 3</option>
-      <option value="five">five 5</option>
-      <option value="seven">seven 7</option>
-      <option value="nine">nine 9</option>
-      <option value="eleven">eleven 11</option>
-    </select><br />
-    电感L (8.00-10.0)：<input type="text" id="p2" onkeyup="value=value.replace(/[^\d{1,}\.\d{1,}|\d{1,}]/g,'')"/> mH
-    <input type="range" id="s2" value="9.3" min="8.0" max="10.0" step="0.001"/>
-  </fieldset>
-</form>
-
-
-<script src="http://numericjs.com/lib/numeric-1.2.6.min.js"></script>
-<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-<!--<script src="d3.min.js"></script> -->
-<!--firefox will give a warning when using d3-->
-<script>
-var scroll = 11,
+  <form>
+    <fieldset>
+      <legend>参数设置</legend>
+      <div id="first">
+      电导G(0.50-0.80)：
+      <input type="text" id="p1" onkeyup="value=value.replace(/[^\d{1,}\.\d{1,}|\d{1,}]/g,'')" 
+          onmouseover="mouseOver()" onmouseout="mouseOut()" onfocus="typeover()" onblur="typeout()"/> mS
+      <input type="range" id="s1" value="0.6061" min="0.50" max="0.80" step="0.0001" onmouseover="mouseOver()" onmouseout="mouseOut()"/> 吸引子个数：
+      <select name="scroll" id="scroll">
+        <option value="three">three 3</option>
+        <option value="five">five 5</option>
+        <option value="seven">seven 7</option>
+        <option value="nine">nine 9</option>
+        <option value="eleven">eleven 11</option>
+      </select><br />
+       电感L (8.00-10.0)：
+      <input type="text" id="p2" onkeyup="value=value.replace(/[^\d{1,}\.\d{1,}|\d{1,}]/g,'')"" /> mH
+      <input type="range" id="s2" value="9.3" min="8.0" max="10.0" step="0.001" />
+    </div>
+    <div id="second" align="right">
+      <br />
+      吸引子<input type="radio" name="lissa" value="0" checked /> <br />
+      电流<input type="radio" name="lissa" value="1" /> <br />
+    </div>
+    </fieldset>
+  </form>
+  
+  <div id="ylt">
+    <img alt="此处应有图片" src="./yl.png" id="pic1" />
+  </div>
+  <div id="rn">
+    <!--svg here-->
+  </div>
+  
+  <script src="http://numericjs.com/lib/numeric-1.2.6.min.js"></script>
+  <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+  <!--<script src="d3.min.js"></script> -->
+  <!--firefox will give a warning when using d3-->
+  <script>
+    var scroll = 11,
     time = 200000,
     G0 = 0.6061, // G[1] = G0;
     G = new Array(0, 0.6061, -0.32, -0.852, -0.32, -0.852, -0.32, -0.852, -0.32, -0.852, -0.32, -0.852, -0.32, -0.852, -0.32),
@@ -83,7 +116,7 @@ var scroll = 11,
     })();
 
 var width = 1800,
-    height = 400;
+    height = 600;
 
 function parlinear(x) {
   var tmp = 0;
@@ -93,39 +126,95 @@ function parlinear(x) {
   return G[12]*x + 0.5*tmp;
 }
 
-var chuafun = function(t, pos) {
-  var C = new Array(5.6, 47.9);
-  return [G0*(pos[1]-pos[0]) / C[0] - parlinear(pos[0]) / C[0],
-          G0*(pos[0]-pos[1]) / C[1] + pos[2] / C[1],
-          -pos[1] / L];
-}
+// var chuafun = function(t, pos) {
+//   var C = new Array(5.6, 47.9);
+//   return [G0*(pos[1]-pos[0]) / C[0] - parlinear(pos[0]) / C[0],
+//           G0*(pos[0]-pos[1]) / C[1] + pos[2] / C[1],
+//           -pos[1] / L];
+// }
 
 var p = document.createElementNS('http://www.w3.org/2000/svg','polyline');
     p.setAttribute("class", "line");
 var s = document.createElementNS('http://www.w3.org/2000/svg','polyline');
     s.setAttribute("class", "stat");
-var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
     svg.setAttribute("height", height);
     svg.setAttribute("width", width);
     svg.setAttribute("style", "margin-left:-200px")
-var stat=document.createElementNS('http://www.w3.org/2000/svg','svg');
-    stat.setAttribute("height", height);
-    stat.setAttribute("width", width);
-    stat.setAttribute("style", "margin-left:-200px")
+// var stat=document.createElementNS('http://www.w3.org/2000/svg','svg');
+//     stat.setAttribute("height", height);
+//     stat.setAttribute("width", width);
+//     stat.setAttribute("style", "margin-left:-200px")
     
-    document.getElementsByTagName("body")[0].appendChild(stat);
     document.getElementsByTagName("body")[0].appendChild(svg);
+    // document.getElementsByTagName("body")[0].appendChild(stat);
     svg.appendChild(p);
-    stat.appendChild(s);
+    //stat.appendChild(s);
+    svg.appendChild(s);
 
-function update() {
-  setp(document.getElementById("scroll").selectedIndex);
-  path = (function() {
+var inplot = false;
+var h; // handler;
+function updatevol() {
+  var path = (function() {
     var start = 0,
-        ini = new Array(0.25, 0.25, 0.25),
+        ini = new Array(0.4*(Math.random()-0.5), 0.4*(Math.random()-0.5), 0.4*(Math.random()-0.5)),
+        path = new Array();
+        while (start < time) {
+          var sol = numeric.dopri(start, time, ini, function(t, pos) {
+                        var C = new Array(5.6, 47.9);
+                        return [G0*(pos[1]-pos[0]) / C[0] - parlinear(pos[0]) / C[0],
+                                G0*(pos[0]-pos[1]) / C[1] + pos[2] / C[1],
+                                -pos[1] / L];
+                    });
+          start = sol.x[sol.x.length-1];
+          for (var i = 0; i < 3; i++) {
+            ini[i] = sol.y[sol.x.length-1][i];
+          }
+          for (var i = 5; i < sol.x.length; i++) {
+            if(typeof(path[Math.floor(sol.x[i]/8000)]) == "undefined") {
+              path[Math.floor(sol.x[i]/8000)] = "";
+            }
+            path[Math.floor(sol.x[i]/8000)] += " " + (sol.x[i] % 8000 + 1600)/8 + "," + (sol.y[i][2]+1)*200;
+          }
+          if (Math.abs(ini[0]) > 12) {
+            break;
+          }
+        }
+        return path;
+  })();
+  var i = 1;
+  inplot = true;
+  svg.removeChild(p);
+  p.setAttribute("points", path[0]);
+  s.setAttribute("points", path[0]);
+  svg.appendChild(p);
+  h = setInterval(function() {
+    if (typeof(path[i]) != "undefined") {
+      svg.removeChild(p);
+      p.setAttribute("points", path[i]);
+      s.setAttribute("points", path[i]);
+      svg.appendChild(p);
+      i++;
+    } else {
+      clearInterval(h);
+      inplot = false;
+    }}, 4500);
+    
+ 
+}
+
+function updatelisa() {
+  var path = (function() {
+    var start = 0,
+        ini = new Array(0.4*(Math.random()-0.5), 0.4*(Math.random()-0.5), 0.4*(Math.random()-0.5)),
         path = "";
         while (start < time) {
-          var sol = numeric.dopri(start, time, ini, chuafun); // same as ode45;
+          var sol = numeric.dopri(start, time, ini, function(t, pos) {
+                        var C = new Array(5.6, 47.9);
+                        return [G0*(pos[1]-pos[0]) / C[0] - parlinear(pos[0]) / C[0],
+                                G0*(pos[0]-pos[1]) / C[1] + pos[2] / C[1],
+                                -pos[1] / L];
+                    }); // same as ode45;
           start = sol.x[sol.x.length-1];
           for (var i = 0; i < 3; i++) {
             ini[i] = sol.y[sol.x.length-1][i];
@@ -140,22 +229,35 @@ function update() {
         return path;
   })();
   svg.removeChild(p);
-  svg.appendChild(p); // for animation, necessary, i have tried to find a better solution
   p.setAttribute("points", path);
+  svg.appendChild(p); // have tried to find a better solution, but in vain, bingzhangdai@zju.edu.cn if you have a better idea
   s.setAttribute("points", path);
   
   // var length = document.querySelector(".polyline").getTotalLength();
   // alert(length)
 }
 
+function update() {
+  if (inplot) {
+    clearInterval(h);
+  }
+  setp(document.getElementById("scroll").selectedIndex);
+  if ($("input[name='lissa']:checked").val() == "1") {
+    updatevol();
+  }
+  else {
+    updatelisa();
+  }
+}
+
 function setp(n) {  // set(update) parameter
-  max = 2 * n + 2; // max = scroll - 1;
+  // max = 2 * n + 2; // max = scroll - 1;
   L = parseFloat(document.getElementById("p2").value);
-  G0 = parseFloat(document.getElementById("p1").value);
+  // G0 = parseFloat(document.getElementById("p1").value);
   G[1] = G0;
   switch(n) {
-    case 0: time = 20000; break; // 3
-    case 1: time = 50000; break; // 5
+    case 0: time = 50000; break; // 3
+    case 1: time = 60000; break; // 5
     case 2: time = 80000; break; // 7
     case 3: time = 110000; break; // 9
     case 4: time = 200000; break; // 11
@@ -177,13 +279,127 @@ function printValue(sliderID, textbox) {
 }
 jQuery('#s1').change(function(){
    printValue('s1', 'p1');
+   plotgl();
+   // alert(0);
 });
-jQuery('#s2').change(function(){
-  printValue('s2', 'p2');
+
+jQuery('#s1').change(function(){
+   printValue('s1', 'p1');
 });
 
-window.onload = function() { printValue('s1', 'p1'); printValue('s2', 'p2'); }
+window.onload = function() { printValue('s1', 'p1'); printValue('s2', 'p2'); plotRn(); plotgl()}
+
+var intype = false;
+function mouseOver() {
+    document.getElementById('pic1').src ="./yl1.png"
+}
+
+function mouseOut() {
+  if (!intype) {
+    document.getElementById('pic1').src ="./yl.png"
+  }
+}
+
+function typeover() {
+  intype = true;
+  mouseOver();
+}
+
+function typeout() {
+  intype = false;
+  mouseOut();
+}
+
+jQuery('#scroll').change(function(){
+  plotRn();
+});
+
+jQuery('#p1').change(function(){
+   plotgl();
+});
 
 
-</script>
+
+var rn = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    rn.setAttribute("height", 300);
+    rn.setAttribute("width", 500);
+    //rn.setAttribute("style", "margin-left:-200px")
+var rnl = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+    rnl.setAttribute("class", "rn");
+    document.getElementById("rn").appendChild(rn);
+    rn.appendChild(rnl);
+var gl = document.createElementNS('http://www.w3.org/2000/svg','path');
+    gl.setAttribute("class", "gl");
+    rn.appendChild(gl);
+var x = document.createElementNS('http://www.w3.org/2000/svg','text');
+    x.appendChild(document.createTextNode("电压V"));
+    x.setAttribute("x", "500");
+    x.setAttribute("dx", "-50");
+    x.setAttribute("y", "150");
+    x.setAttribute("dy", "20")
+    x.setAttribute("font-size", 15);
+    rn.appendChild(x);
+var y = document.createElementNS('http://www.w3.org/2000/svg','text');
+    y.appendChild(document.createTextNode("f(V)"));
+    y.setAttribute("x", "250");
+    y.setAttribute("dx", "5");
+    y.setAttribute("y", "0");
+    y.setAttribute("dy", "25")
+    y.setAttribute("font-size", 15);
+    rn.appendChild(y);
+    
+var defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+var marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+    marker.setAttribute("id", "arrow");
+    marker.setAttribute("markerUnits", "strokeWidth");
+    marker.setAttribute("markerWidth", "12");
+    marker.setAttribute("markerHeight", "12");
+    marker.setAttribute("viewBox", "0 0 12 12");
+    marker.setAttribute("refX", "6");
+    marker.setAttribute("refY", "6");
+    marker.setAttribute("orient", 'auto');
+var mpath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    mpath.setAttribute("d", "M2,2 L10,6 L2,10 L6,6 L2,2")
+    mpath.setAttribute("fill", "#000000");
+    marker.appendChild(mpath);
+    defs.appendChild(marker);
+    rn.appendChild(defs);
+
+var ax = document.createElementNS('http://www.w3.org/2000/svg','line');
+    ax.setAttribute("x1", "25");
+    ax.setAttribute("y1", "150");
+    ax.setAttribute("x2", "475");
+    ax.setAttribute("y2", "150");
+    ax.setAttribute("stroke", "black");
+    ax.setAttribute("marker-end", "url(#arrow)");
+    rn.appendChild(ax);
+var ay = document.createElementNS('http://www.w3.org/2000/svg','line');
+    ay.setAttribute("x1", "250");
+    ay.setAttribute("y1", "285");
+    ay.setAttribute("x2", "250");
+    ay.setAttribute("y2", "15");
+    ay.setAttribute("stroke", "black");
+    ay.setAttribute("marker-end", "url(#arrow)");
+    rn.appendChild(ay);
+    
+        
+function plotgl() {
+  G0 = parseFloat(document.getElementById("p1").value);
+  var path = "M50," + (150-G0*200) + " L450," + (150+G0*200);
+  gl.setAttribute("d", path);
+}
+    
+function plotRn() {
+   max = document.getElementById("scroll").selectedIndex *2 + 2;
+   var path = (function() {
+     var path = "";
+     for (var i = 0; i < 250; i++) {
+       path += (2*i) + "," + ((-parlinear((2*i - 250) / 50) + 3) * 50) + " ";
+     }
+     return path;
+   })();
+   rnl.setAttribute("points", path);
+}
+
+  </script>
 </body>
