@@ -20,11 +20,31 @@
     stroke-width: 1px;
     stroke-opacity: 1;
     fill: none;
-    stroke-dasharray: 10000000;
-    stroke-dashoffset: 10000000;
-    animation: dash 4000s linear forwards;
+    /*stroke-dasharray: 10000000;
+    stroke-dashoffset: 10000000;*/
+    animation: dash 40s linear forwards;
   }
-  
+  .line0 {
+    stroke: red;
+    stroke-width: 1px;
+    stroke-opacity: 1;
+    fill: none;
+    animation: dash 100s linear forwards;
+  }
+  .line1 {
+    stroke: red;
+    stroke-width: 1px;
+    stroke-opacity: 1;
+    fill: none;
+    animation: dash 400s linear forwards;
+  }
+  .line2 {
+    stroke: red;
+    stroke-width: 1px;
+    stroke-opacity: 1;
+    fill: none;
+    animation: dash 5s linear forwards;
+  }
   .stat {
     stroke: yellow;
     stroke-width: 1px;
@@ -91,8 +111,9 @@
     <!--svg here-->
   </div>
   
-  <script src="http://numericjs.com/lib/numeric-1.2.6.min.js"></script>
-  <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script src="numeric-1.2.6.min.js"></script>
+  <script src="jquery-1.11.3.min.js"></script>
+  <!--<script src="vivus.min.js"></script>-->
   <!--<script src="d3.min.js"></script> -->
   <!--firefox will give a warning when using d3-->
   <script>
@@ -133,14 +154,14 @@ function parlinear(x) {
 //           -pos[1] / L];
 // }
 
-var p = document.createElementNS('http://www.w3.org/2000/svg','polyline');
-    p.setAttribute("class", "line");
-var s = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+var p = document.createElementNS('http://www.w3.org/2000/svg','path');
+var s = document.createElementNS('http://www.w3.org/2000/svg','path');
     s.setAttribute("class", "stat");
 var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
     svg.setAttribute("height", height);
     svg.setAttribute("width", width);
     svg.setAttribute("style", "margin-left:-200px")
+    svg.setAttribute("id", "dynamic");
 // var stat=document.createElementNS('http://www.w3.org/2000/svg','svg');
 //     stat.setAttribute("height", height);
 //     stat.setAttribute("width", width);
@@ -172,9 +193,9 @@ function updatevol() {
           }
           for (var i = 5; i < sol.x.length; i++) {
             if(typeof(path[Math.floor(sol.x[i]/8000)]) == "undefined") {
-              path[Math.floor(sol.x[i]/8000)] = "";
+              path[Math.floor(sol.x[i]/8000)] = "M" + (sol.x[i] % 8000 + 1600)/8 + "," + (sol.y[i][2]+1)*200 + " ";
             }
-            path[Math.floor(sol.x[i]/8000)] += " " + (sol.x[i] % 8000 + 1600)/8 + "," + (sol.y[i][2]+1)*200;
+            path[Math.floor(sol.x[i]/8000)] += "L" + (sol.x[i] % 8000 + 1600)/8 + "," + (sol.y[i][2]+1)*200;
           }
           if (Math.abs(ini[0]) > 12) {
             break;
@@ -185,29 +206,34 @@ function updatevol() {
   var i = 1;
   inplot = true;
   svg.removeChild(p);
-  p.setAttribute("points", path[0]);
-  s.setAttribute("points", path[0]);
+  p.setAttribute("d", path[0]);
+  var length = p.getTotalLength();
+  p.setAttribute("stroke-dasharray", length);
+  p.setAttribute("stroke-dashoffset", length);
+  p.setAttribute("class", "line2");
+  s.setAttribute("d", path[0]);
   svg.appendChild(p);
   h = setInterval(function() {
     if (typeof(path[i]) != "undefined") {
       svg.removeChild(p);
-      p.setAttribute("points", path[i]);
-      s.setAttribute("points", path[i]);
+      p.setAttribute("d", path[i]);
+      var length = p.getTotalLength();
+      p.setAttribute("stroke-dasharray", length);
+      p.setAttribute("stroke-dashoffset", length);
+      s.setAttribute("d", path[i]);
       svg.appendChild(p);
       i++;
     } else {
       clearInterval(h);
       inplot = false;
-    }}, 4500);
-    
- 
+    }}, 5100);
 }
 
 function updatelisa() {
   var path = (function() {
     var start = 0,
         ini = new Array(0.4*(Math.random()-0.5), 0.4*(Math.random()-0.5), 0.4*(Math.random()-0.5)),
-        path = "";
+        path;
         while (start < time) {
           var sol = numeric.dopri(start, time, ini, function(t, pos) {
                         var C = new Array(5.6, 47.9);
@@ -220,7 +246,11 @@ function updatelisa() {
             ini[i] = sol.y[sol.x.length-1][i];
           }
           for (var i = 5; i < sol.x.length; i++) {
-            path += (sol.y[i][0]+4.5)*160 + "," + (sol.y[i][1]+0.5)*480 + " "
+            if (typeof(path) == "undefined") {
+              path = "M" + (sol.y[i][0]+4.5)*160 + "," + (sol.y[i][1]+0.5)*480 + " "
+              continue;
+            }
+            path += "L" + (sol.y[i][0]+4.5)*160 + "," + (sol.y[i][1]+0.5)*480 + " "
           }
           if (Math.abs(ini[0]) > 12) {
             break;
@@ -228,11 +258,28 @@ function updatelisa() {
         }
         return path;
   })();
-  svg.removeChild(p);
-  p.setAttribute("points", path);
-  svg.appendChild(p); // have tried to find a better solution, but in vain, bingzhangdai@zju.edu.cn if you have a better idea
-  s.setAttribute("points", path);
   
+  p.setAttribute("d", path);
+  var length = p.getTotalLength();
+  p.setAttribute("stroke-dasharray", length);
+  p.setAttribute("stroke-dashoffset", length);
+  if (document.getElementById("scroll").selectedIndex < 2) {
+      p.setAttribute("class", "line");
+  }
+  else if (document.getElementById("scroll").selectedIndex < 4) {
+      p.setAttribute("class", "line0");
+  }
+  else {
+      p.setAttribute("class", "line1");
+  }
+  
+
+  // alert(document.querySelector('.line').getTotalLength());
+  svg.removeChild(p);
+  svg.appendChild(p); // have tried to find a better solution, but in vain, bingzhangdai@zju.edu.cn if you have a better idea
+  // new Vivus('dynamic', {duration: 200});
+  s.setAttribute("d", path);
+  // new Vivus('dynamic', {duration: 5000});
   // var length = document.querySelector(".polyline").getTotalLength();
   // alert(length)
 }
@@ -283,8 +330,8 @@ jQuery('#s1').change(function(){
    // alert(0);
 });
 
-jQuery('#s1').change(function(){
-   printValue('s1', 'p1');
+jQuery('#s2').change(function(){
+   printValue('s2', 'p2');
 });
 
 window.onload = function() { printValue('s1', 'p1'); printValue('s2', 'p2'); plotRn(); plotgl()}
